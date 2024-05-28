@@ -1,0 +1,84 @@
+def test_add_new_pet_with_valid_data():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    status, result = pf.add_new_pet(auth_key, 'Bobby', 'dog', '3', 'images/dog.jpg')
+    assert status == 200
+    assert result['name'] == 'Bobby'
+
+def test_delete_pet():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, pets = pf.get_list_of_pets(auth_key, "")
+    if len(pets['pets']) == 0:
+        pf.add_new_pet(auth_key, 'Bobby', 'dog', '3', 'images/dog.jpg')
+        _, pets = pf.get_list_of_pets(auth_key, "")
+    pet_id = pets['pets'][0]['id']
+    status, _ = pf.delete_pet(auth_key, pet_id)
+    assert status == 200
+
+def test_update_pet_info():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, pets = pf.get_list_of_pets(auth_key, "")
+    if len(pets['pets']) > 0:
+        pet_id = pets['pets'][0]['id']
+        status, result = pf.update_pet_info(auth_key, pet_id, 'Bobby', 'dog', '4')
+        assert status == 200
+        assert result['name'] == 'Bobby'
+    else:
+        raise Exception("There is no pet to update")
+
+# Дополнительные негативные тесты
+
+def test_add_new_pet_with_invalid_key():
+    invalid_key = {'key': '12345'}
+    status, _ = pf.add_new_pet(invalid_key, 'Bobby', 'dog', '3', 'images/dog.jpg')
+    assert status == 403
+
+def test_delete_pet_with_invalid_key():
+    invalid_key = {'key': '12345'}
+    status, _ = pf.delete_pet(invalid_key, 'some_pet_id')
+    assert status == 403
+
+def test_update_pet_info_with_invalid_key():
+    invalid_key = {'key': '12345'}
+    status, _ = pf.update_pet_info(invalid_key, 'some_pet_id', 'Bobby', 'dog', '4')
+    assert status == 403
+
+def test_get_all_pets_with_invalid_key():
+    invalid_key = {'key': '12345'}
+    status, _ = pf.get_list_of_pets(invalid_key, "")
+    assert status == 403
+
+def test_add_new_pet_with_empty_data():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    status, result = pf.add_new_pet(auth_key, '', '', '', 'images/empty.jpg')
+    assert status != 200
+
+def test_update_pet_info_with_empty_data():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, pets = pf.get_list_of_pets(auth_key, "")
+    if len(pets['pets']) > 0:
+        pet_id = pets['pets'][0]['id']
+        status, result = pf.update_pet_info(auth_key, pet_id, '', '', '')
+        assert status != 200
+    else:
+        raise Exception("There is no pet to update")
+
+def test_add_new_pet_with_long_data():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    long_name = 'B' * 256
+    long_type = 'D' * 256
+    long_age = '10' * 128
+    status, result = pf.add_new_pet(auth_key, long_name, long_type, long_age, 'images/dog.jpg')
+    assert status != 200
+
+def test_update_pet_info_with_long_data():
+    _, auth_key = pf.get_api_key(valid_email, valid_password)
+    _, pets = pf.get_list_of_pets(auth_key, "")
+    if len(pets['pets']) > 0:
+        pet_id = pets['pets'][0]['id']
+        long_name = 'B' * 256
+        long_type = 'D' * 256
+        long_age = '10' * 128
+        status, result = pf.update_pet_info(auth_key, pet_id, long_name, long_type, long_age)
+        assert status != 200
+    else:
+        raise Exception("There is no pet to update")
